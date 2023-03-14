@@ -1,4 +1,14 @@
-# Make-Rainbow-Table
+# Rainbow-Table-Tools-2023
+
+A collection to gather hashes, generate rainbow tables, and search against them using the tools included in this repository.
+
+## Collecting Hashes
+
+You can utilize thehashhunter.py to comb URLs for any hashes and save them as a file for later use.
+
+    $ python thehashcollector.py
+
+## Make-Rainbow-Table
 A simple rainbow table generator supporting MD5, SHA224, SHA256, SHA384, and SHA512, written in **Python 2.7**.
 
 ## Usage
@@ -32,15 +42,10 @@ You can specify what you feel necessary, however.
 
 If the specified database does not exist, then it will be created for you.
 
-## Collecting Hashes
 
-You can utilize thehashhunter.py to comb URLs for any hashes and save them as a file for later use.
+## Search for hashes the Generated Rainbow Table
 
-    $ python thehashcollector.py
-
-## Using the Generated Rainbow Table
-
-You can just run this command in the terminal, add chmod +x if you prefer
+You can just run this command in the terminal, add chmod +x if you prefer. You will need your table, and your hashes from previous steps.
 
     $ bash htcheck.sh
     
