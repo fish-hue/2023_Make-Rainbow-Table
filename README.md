@@ -34,6 +34,8 @@ If the specified database does not exist, then it will be created for you.
 
 ## Using the Generated Rainbow Table
 
+You can just run this command in the terminal, add chmod +x if you prefer
+
     $ bash htcheck.sh
     
 This is an overly simple script that will search a given database for a given hash, and provide the plaintext output found, if any.
