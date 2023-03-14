@@ -32,6 +32,12 @@ You can specify what you feel necessary, however.
 
 If the specified database does not exist, then it will be created for you.
 
+## Collecting Hashes
+
+You can utilize thehashhunter.py to comb URLs for any hashes and save them as a file for later use.
+
+    $ python thehashcollector.py
+
 ## Using the Generated Rainbow Table
 
 You can just run this command in the terminal, add chmod +x if you prefer
