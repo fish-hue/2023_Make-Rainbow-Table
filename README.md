@@ -42,6 +42,11 @@ You can specify what you feel necessary, however.
 
 If the specified database does not exist, then it will be created for you.
 
+## Generate Customized Wordlists 
+
+Use wordlistmod.py to add uppercase letters, numbers, and special characters to an existing list
+
+    $ python wordlistmod.py
 
 ## Search for hashes the Generated Rainbow Table
 
