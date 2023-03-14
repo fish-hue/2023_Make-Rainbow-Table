@@ -4,7 +4,7 @@ A collection to gather hashes, generate rainbow tables, and search against them 
 
 ## Collecting Hashes
 
-You can utilize thehashhunter.py to comb URLs for any hashes and save them as a file for later use.
+You can utilize thecollector.py to comb URLs for any hashes and save them as a file for later use.
 
     $ python thehashcollector.py
 
