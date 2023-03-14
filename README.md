@@ -3,13 +3,13 @@ A simple rainbow table generator supporting MD5, SHA224, SHA256, SHA384, and SHA
 
 ## Usage
 
-    $ python make-rainbow-table.py [-h] [-d DATABASE] [-w WORDLIST] [-t HASHTYPE]
+    $ python make-rainbow-table.py [-h] [-o DATABASE] [-w WORDLIST] [-t HASHTYPE]
     
 **Arguments:** 
 
     -h, --help                                                  show this help message and exit
   
-    -d DB_NAME, --db=DB_NAME, --database=DB_NAME                Database to fill with hashes. (default='rainbow.db')
+    -o DB_NAME, --db=DB_NAME, --database=DB_NAME                Database to fill with hashes. (default='rainbow.db')
                         
     -w WORD_LIST_NAME, --wordlist=WORD_LIST_NAME                Wordlist to read from and hash. (default='linux.words')
                         
@@ -24,11 +24,11 @@ By default, the program will create a database called rainbow.db and use its loc
 
 You can specify what you feel necessary, however.
     
-    $ python make-rainbow-table.py -d rainbow.db -w linux.words -t all
+    $ python make-rainbow-table.py -o rainbow.db -w linux.words -t all
     
     $ python make-rainbow-table.py -t md5
     
-    $ python make-rainbow-table.py -d rbdatabase.db -w mycustom.list -t sha256
+    $ python make-rainbow-table.py -o rbdatabase.db -w mycustom.list -t sha256
 
 If the specified database does not exist, then it will be created for you.
 
