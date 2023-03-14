@@ -4,124 +4,95 @@
                           of a wordlist using MD5, SHA224, SHA256,
                           SHA384, SHA512, or all.'''
 
-__author__    = 'Brian Jopling'
-__copyright__ = 'Copyright 2017'
-__credits__   = ['Brian Jopling']
-__license__   = 'MIT'
-__version__   = '1.0'
-__status__    = 'Development'
-
-'''
-USAGE
-Ensure this file resides in the same directory as your wordlist.
-Run with:
-
- $ python make-rainbow-table.py -w WORDLIST -t HASHTYPE
-
-The following are valid hashtypes:
-md5, sha224, sha256, sha384, sha512, all
-'''
-
-
-''' IMPORTS '''
-# Used for database modification:
-import sqlite3
-# Used for hashing:
+import argparse
 import hashlib
-# Used for getting options/args:
-from optparse import OptionParser
+import sqlite3
+import datetime
 
 
-''' OPTIONS / ARGS '''
-parser = OptionParser()
-parser.add_option('-d', '--db', '--database', dest='db_name',
-                    action='store', default='rainbow.db',
-                    help='Database to fill with hashes.')
-parser.add_option('-w', '--wordlist', dest='word_list_name',
-                    action='store', default='linux.words',
-                    help='Wordlist to read from and hash.')
-parser.add_option('-t', '--type', dest='hash_type',
-                    action='store', default='all',
-                    metavar='md5|sha224|sha256|sha384|sha512|all')
-(options, args) = parser.parse_args()
+HASH_FUNCTIONS = {
+    'md5': hashlib.md5,
+    'sha224': hashlib.sha224,
+    'sha256': hashlib.sha256,
+    'sha384': hashlib.sha384,
+    'sha512': hashlib.sha512,
+}
 
 
-''' FUNCTIONS '''
-
-def create_rainbow_table(db_rainbow):
+def create_rainbow_table(db):
     '''Creates a table \'rainbow\' in database with two fields,
        one for hash, one for word.'''
     try:
-        db_rainbow.execute('CREATE TABLE rainbow (hash VARCHAR(255) \
+        db.execute('CREATE TABLE rainbow (hash VARCHAR(255) \
                             PRIMARY KEY, word VARCHAR(255));')
     except sqlite3.OperationalError:
-        print 'Table \'rainbow\' already exists!'
+        print('Table \'rainbow\' already exists!')
 
 
-def append_to_table(db_rainbow, word_hashed, word):
+def append_to_table(db, word_hashed, word):
     '''Inserts a word and its hash into the \'rainbow\' table of our db.'''
-    sql_values = (word_hashed, word)
     try:
-        db_rainbow.execute('INSERT INTO rainbow \
-                            (hash, word) VALUES (?, ?);',
-                            sql_values)
+        db.execute('INSERT INTO rainbow (hash, word) VALUES (?, ?);',
+                   (word_hashed, word))
     except sqlite3.IntegrityError:
-        print '%s is already in the database as hash %s' % (word, word_hashed)
+        print('%s is already in the database as hash %s' % (word, word_hashed))
 
 
 def hash_word(word, hash_type):
     '''Returns hashed word of specified hash type.'''
-    if hash_type == 'md5':
-        return hashlib.md5(word).hexdigest()
-    elif hash_type == 'sha224':
-        return hashlib.sha224(word).hexdigest()
-    elif hash_type == 'sha256':
-        return hashlib.sha256(word).hexdigest()
-    elif hash_type == 'sha384':
-        return hashlib.sha384(word).hexdigest()
-    elif hash_type == 'sha512':
-        return hashlib.sha512(word).hexdigest()
+    if hash_type == 'all':
+        return [hash_word(word, ht) for ht in HASH_FUNCTIONS]
+    elif hash_type in HASH_FUNCTIONS:
+        hash_func = HASH_FUNCTIONS[hash_type]
+        return hash_func(word.encode()).hexdigest()
     else:
-        return None
+        raise ValueError('Invalid hash type specified!')
 
 
-def iterate_wordlist(word_list_name, db_rainbow):
-    hash_types = ['md5', 'sha224', 'sha256', 'sha384', 'sha512']
-    hash_type = options.hash_type
-    file_word_list = open(word_list_name, 'r')
-    for word in file_word_list:
-        if hash_type == 'all':
-            for t in hash_types:
-                word_hashed = hash_word(word, t)
-                append_to_table(db_rainbow, word_hashed, word)
-        else:
-            word_hashed = hash_word(word, hash_type)
-            append_to_table(db_rainbow, word_hashed, word)
-    file_word_list.close()
-
-
-def save_and_close_db(db_connect):
-    # Save our changes:
-    db_connect.commit()
-    # Close the db:
-    db_connect.close()
-
+import argparse
 
 def main():
-    # Get CLI options.
-    db_name = options.db_name
-    word_list_name = options.word_list_name
+    parser = argparse.ArgumentParser(description='Create rainbow table of desired hash types.')
+    parser.add_argument('-w', '--wordlist', type=str, required=True,
+                        help='wordlist file to use for creating rainbow table')
+    parser.add_argument('-t', '--hash-type', type=str, default='all',
+                        help='hash type to use for creating rainbow table (default: all)')
+    parser.add_argument('-d', '--database', type=str, default='rainbow.db',
+                        help='database file to store rainbow table (default: rainbow.db)')
+    parser.add_argument('-o', '--output-file', type=str, default=None,
+                        help='output file to save rainbow table (default: None)')
+    args = parser.parse_args()
 
-    # Connect to db.
-    db_connect = sqlite3.connect(db_name)
-    db_rainbow = db_connect.cursor()
+    # Check if hash type is valid
+    if args.hash_type != 'all' and args.hash_type not in HASH_FUNCTIONS:
+        print('Invalid hash type specified!')
+        exit(1)
 
-    # Modify db.
-    create_rainbow_table(db_rainbow)
-    iterate_wordlist(word_list_name, db_rainbow)
-    save_and_close_db(db_connect)
+    # Connect to database
+    conn = sqlite3.connect(args.database)
+    c = conn.cursor()
+
+    # Create rainbow table
+    create_rainbow_table(c)
+
+    # Open wordlist file and hash each word
+    with open(args.wordlist, 'r') as f:
+        for word in f:
+            word = word.strip()
+            word_hashed = hash_word(word, args.hash_type)
+            append_to_table(c, word_hashed, word)
+            if args.output_file:
+                with open(args.output_file, 'a') as out_file:
+                    out_file.write(f'{word_hashed}:{word}\n')
+
+    # Commit changes and close database connection
+    conn.commit()
+    conn.close()
 
 
-''' PROCESS '''
+
 if __name__ == '__main__':
+    start_time = datetime.datetime.now()
     main()
+    end_time = datetime.datetime.now()
+    print('Execution time: %s' % (end_time - start_time))
